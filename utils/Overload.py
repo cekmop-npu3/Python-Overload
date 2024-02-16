@@ -1,7 +1,7 @@
 from typing import Self, Callable, Any, Iterable
 
 from difflib import Differ
-from re import finditer, search
+from re import finditer, search, Match
 
 
 __all__ = [
@@ -55,8 +55,7 @@ class Overload:
             return func(self.instance, *args, **kwargs)
 
     def __iadd__(self, func) -> Self:
-        annotations = func.__annotations__
-        if 'return' in annotations:
+        if 'return' in (annotations := func.__annotations__):
             annotations.pop('return')
         if annotations:
             self.func_dict["['" + (search("'(.+?)'", a).groups()[0] if (a := str(list(annotations.values())[0])).startswith('<class') else a) + "']"] = func
@@ -88,12 +87,12 @@ def annotate(obj: Any) -> str:
         return type(obj).__name__
 
 
-def sort(element):
-    if hasattr(sort, '__first__') and hasattr(sort, '__count__'):
+def sort(element: Match) -> int:
+    if hasattr(sort, '__count__'):
         sort.__count__ += 1
         return element.start() - len('typing.Any') * sort.__count__
     else:
-        sort.__first__, sort.__count__ = True, 0
+        sort.__count__ = 0
         return element.start()
 
 
@@ -101,14 +100,13 @@ def get_empty_pos(string: str) -> Iterable:
     return map(sort, finditer('typing\.Any', string)) if 'typing.Any' in string else []
 
 
-def strings_difference(string1: str, string2: str) -> list:
-    string = ''
+def strings_difference(string1: str, string2: str, string='') -> list:
     for i in Differ().compare(string1, string2):
         string = string + i.replace('-', '').strip() if i.startswith('-') else string + ' '
     return string.split()
 
 
-def compare(string1: str, string2: str):
+def compare(string1: str, string2: str) -> str:
     ln = ''
     for cord, elem in zip(get_empty_pos(string2), strings_difference(string1, string := string2.replace('typing.Any', ''))):
         try:

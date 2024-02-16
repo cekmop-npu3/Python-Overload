@@ -18,13 +18,12 @@ class MessageRaw(dict, metaclass=OverloadMeta):
         [self.__setitem__(item[0], item[1]) for item in obj]
 
     @overload
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__()
         [self.__setitem__(key, value) for key, value in kwargs.items()]
 
     def __setitem__(self, key: str, value: Any) -> None:
-        key = f'{key}_' if iskeyword(key) else key
-        super().__setitem__(key, value)
+        super().__setitem__(f'{key}_' if iskeyword(key) else key, value)
 
     def __getitem__(self, item: str) -> Any:
         return super().__getitem__(f'{item}_') if iskeyword(item) else super().__getitem__(item)
@@ -36,7 +35,7 @@ class MessageRaw(dict, metaclass=OverloadMeta):
         return f'MessageRaw({", ".join([f"{key}={value}" for key, value in self.items()])})'
 
 
-@dataclass(slots=True)
+@dataclass()
 class User:
     a: Any
 
